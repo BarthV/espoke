@@ -1,4 +1,4 @@
-# espoke - A prometheus whitebox probe for ES clusters
+# espoke - A prometheus blackbox probe for ES clusters
 
 * Only works using a opinionated consul model as discovery method
 * Expose prometheus metrics from a blank search on every ES indexes of every datanodes
