@@ -1,0 +1,37 @@
+language: go
+matrix:
+  include:
+    - go: 1.11.x
+      env: RELEASE_VERSION=true
+    - go: tip
+  allow_failures:
+    - go: tip
+
+# simple cross compile tool for go
+before_install:
+  - go get github.com/mitchellh/gox
+  # - go get -t -v ./...
+
+install:
+  - # skip
+
+script:
+  - ./go.test.sh
+  - if [ "${RELEASE_VERSION}"  = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: g1h3+JvhpxRQ+a8T9v1uHPIYJCAb3Pboc02GCm+kjTJKDehX9xNSss0SC/c8a7BXpdgn0OuZfI67OulfAxGBcnT+lkwJAY8lashkdw+IM5OztFL2MTq/25lB6WBubwZ6txDerQ8DtdKvmedWxkTUYjZFbPwcH6CXbcqCoYNZtusQ0NLaBRV9ucBgtJWD3Aq5QZUdoih3xEbhKPmJys5wHnB2nrmj/qeqCGaOgDN3KLmDu3XUmYVv7jRM4SDyoT9QtUseBk0fJxFUlturOg0BlBb7Pyp3cew1ja2+Kn33qkavkDIw/a8zl1XeXYpPc0KAEK/bxcUJfhG48gOEV00FnYLZTTdTrCZIh6agc6zBIA2MjL3gq42zrRcVZBAyOwxlZu40dKACWHVt/bY7VkblhUAUr/6D64H200kl/XfcC9iTQZ1zRbRxgF33BLCRAn2YXpqJ3dwwNgBhzOfFDWpy5WcdYWlHe9+Is4cLH1a2XMz6ajGnCdEwdgyBnPvJu7W9pLy+hB6VTPdyZiMmU++vhxfqUc7YaAXHWOBAy8fl4bloZvV3X50qlKpe6nxAA1vlnttKsCNgzmmwRiMTq4QumO5nYry4IUEVTQBy/yI9GFId6PxRZgQ9KIQd22OAxjkh7pVLM9ancRVQBbbUAMhWQ1wWTnhjcgY9Iy7r0JwhDvA=
+  file:
+    - "espoke_linux_amd64"
+    - "espoke_darwin_amd64"
+    - "espoke_windows_amd64.exe"
+  skip_cleanup: true
+  on:
+    repo: BarthV/espoke
+    tags: true
+    condition: $RELEASE_VERSION = true
