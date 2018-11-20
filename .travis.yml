@@ -28,9 +28,9 @@ deploy:
   api_key:
     secure: WYqs6d52utQJWahpEli1SibaKrBdFFQ+/fqaoNweKWdCp0/cvk2EPhfRkSOL7FPZxyh+vk6iQFvYaagQYpPbpDmnJF2EEnfCf+L4CSjTcsamMkurOU3/HU4U2kGg9NaGGeci7CuirXkeQuu+Gbqar/V88qNB/UGO+rAR8cLhJVguQZtcGtip5zLMweINil1xan/WnBBFI3UOZiNuIxjtztuw0A1FTclfao4aondYWNh8M8l19DWd8X5zrJFGoFlyxX8UR9yroELVTm2dbO0RY3qBnHefa+ND//hb8NQDMyF7tRKiQUJCgwfE/Ppt4XBZgveZT1wlYFJLQXAg1pRx0cT5NgU4OxzrflYieTwuxcGV8N69GL8O4mzk9PE6+vM8Cox7xY7zEtkppjhBBnT3DAl6NyKCLarqFrZ+Hj60rdh1/KxGl5ELXtsfeREJi6ZgSfP5RhjJi/5GzO9InkefThQ9WVPfJwOiXaIh2cVcfHxWFwUzTF+Sielj/ppedPzQBbsr4TvbF1naRXh5Prio9HIg43r7SDnJbMUqjHByKJ4ldwKYyC8p5LMSf1qJwpkkYGHdnxZ+kyeoxXkEwOCk0iX1MCJXEFgRDwpKdgCZ7ZhP14F91QnkDohCZjnvitsXKgfnp7rUAW3erl+ChU29zSmffWim+TUtCitNrialwGE=
   file:
-    - espoke_linux_amd64
-    - espoke_darwin_amd64
-    - espoke_windows_amd64.exe
+    - "espoke_linux_amd64"
+    - "espoke_darwin_amd64"
+    - "espoke_windows_amd64.exe"
   skip_cleanup: true
   on:
     repo: BarthV/espoke
