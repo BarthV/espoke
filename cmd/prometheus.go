@@ -21,23 +21,23 @@ var (
 		Help: "Reports Espoke internal errors absolute counter since start",
 	})
 
-	datanodeCount = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "es_datanode_count",
+	nodeCount = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "es_node_count",
 		Help: "Reports current discovered nodes amount",
 	})
 
-	datanodeAvailabilityGauge = promauto.NewGaugeVec(
+	nodeAvailabilityGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "es_datanode_availability",
-			Help: "Reflects datanode availabity : 1 is OK, 0 means node unavailable ",
+			Name: "es_node_availability",
+			Help: "Reflects node availabity : 1 is OK, 0 means node unavailable ",
 		},
 		[]string{"cluster", "nodename"},
 	)
 
-	datanodeSearchLatencySummary = promauto.NewSummaryVec(
+	nodeSearchLatencySummary = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name:       "es_datanode_search_latency",
-			Help:       "Measure latency for every datanode (quantiles - in ns)",
+			Name:       "es_node_search_latency",
+			Help:       "Measure latency for every node (quantiles - in ns)",
 			MaxAge:     20 * time.Minute, // default value * 2
 			AgeBuckets: 20,               // default value * 4
 			BufCap:     2000,             // default value * 4
@@ -70,15 +70,15 @@ func startMetricsEndpoint() {
 	}()
 }
 
-func cleanMetrics(datanodes []datanode, allEverKnownDatanodes []string) error {
+func cleanMetrics(nodes []esnode, allEverKnownNodes []string) error {
 	start := time.Now()
 
-	for _, nodeSerializedString := range allEverKnownDatanodes {
+	for _, nodeSerializedString := range allEverKnownNodes {
 		n := strings.SplitN(nodeSerializedString, "|", 2) // [0]: name , [1] cluster
 
 		deleteThisNodeMetrics := true
-		for _, datanode := range datanodes {
-			if (datanode.name == n[0]) && (datanode.cluster == n[1]) {
+		for _, node := range nodes {
+			if (node.name == n[0]) && (node.cluster == n[1]) {
 				log.Debug("Metrics are live for node ", n[0], " from cluster ", n[1], " - keeping them")
 				deleteThisNodeMetrics = false
 				continue
@@ -86,8 +86,8 @@ func cleanMetrics(datanodes []datanode, allEverKnownDatanodes []string) error {
 		}
 		if deleteThisNodeMetrics {
 			log.Info("Metrics removed for vanished node ", n[0], " from cluster ", n[1])
-			datanodeAvailabilityGauge.DeleteLabelValues(n[1], n[0])
-			datanodeSearchLatencySummary.DeleteLabelValues(n[1], n[0])
+			nodeAvailabilityGauge.DeleteLabelValues(n[1], n[0])
+			nodeSearchLatencySummary.DeleteLabelValues(n[1], n[0])
 		}
 	}
 

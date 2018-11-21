@@ -22,13 +22,13 @@ Expose all measures using a prometheus compliant HTTP endpoint.`,
 		startMetricsEndpoint()
 
 		log.Info("Discovering ES nodes for the first time")
-		allEverKnownDatanodes := []string{}
-		datanodesList, err := discoverEsNodes()
+		allEverKnownNodes := []string{}
+		nodesList, err := discoverEsNodes()
 		if err != nil {
 			errorsCount.Inc()
 			log.Fatal("Impossible to discover ES datanodes during bootstrap, exiting")
 		}
-		allEverKnownDatanodes = updateEverKnownDatanodes(allEverKnownDatanodes, datanodesList)
+		allEverKnownNodes = updateEverKnownNodes(allEverKnownNodes, nodesList)
 
 		log.Info("Initializing tickers")
 		updateDiscoveryPeriod, err := time.ParseDuration(consulPeriod)
@@ -48,7 +48,7 @@ Expose all measures using a prometheus compliant HTTP endpoint.`,
 			updateProbingPeriod = 30 * time.Second
 		}
 		if updateProbingPeriod < 20*time.Second {
-			log.Warning("Probing elasticsearch datanodes more than 3 times a minute is not allowed, fallback to 20s")
+			log.Warning("Probing elasticsearch nodes more than 3 times a minute is not allowed, fallback to 20s")
 			updateProbingPeriod = 20 * time.Second
 		}
 		log.Info("Probing interval: ", updateProbingPeriod.String())
@@ -72,31 +72,31 @@ Expose all measures using a prometheus compliant HTTP endpoint.`,
 			select {
 			case <-cleanMetricsTicker.C:
 				log.Info("Cleaning Prometheus metrics for unreferenced nodes")
-				cleanMetrics(datanodesList, allEverKnownDatanodes)
+				cleanMetrics(nodesList, allEverKnownNodes)
 
 			case <-updateDiscoveryTicker.C:
-				log.Debug("Starting updating ES data nodes list")
+				log.Debug("Starting updating ES nodes list")
 
 				updatedList, err := discoverEsNodes()
 				if err != nil {
-					log.Error("Unable to update ES datanodes, using last known state")
+					log.Error("Unable to update ES nodes, using last known state")
 					errorsCount.Inc()
 					continue
 				}
 
-				log.Info("Updating data nodes list")
-				allEverKnownDatanodes = updateEverKnownDatanodes(allEverKnownDatanodes, updatedList)
-				datanodesList = updatedList
+				log.Info("Updating nodes list")
+				allEverKnownNodes = updateEverKnownNodes(allEverKnownNodes, updatedList)
+				nodesList = updatedList
 
 			case <-executeProbingTicker.C:
 				log.Debug("Starting probing ES nodes")
 
 				sem := new(sync.WaitGroup)
-				for _, node := range datanodesList {
+				for _, node := range nodesList {
 					sem.Add(1)
-					go func(loopnode datanode) {
+					go func(loopnode esnode) {
 						defer sem.Done()
-						probeDatanode(&loopnode, updateProbingPeriod)
+						probeNode(&loopnode, updateProbingPeriod)
 					}(node)
 
 				}

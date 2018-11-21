@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type datanode struct {
+type esnode struct {
 	name    string
 	ip      string
 	port    int
@@ -30,15 +30,15 @@ func contains(a []string, x string) bool {
 	return false
 }
 
-func updateEverKnownDatanodes(allEverKnownDatanodes []string, datanodes []datanode) []string {
-	for _, node := range datanodes {
+func updateEverKnownNodes(allEverKnownNodes []string, nodes []esnode) []string {
+	for _, node := range nodes {
 		serializedNode := fmt.Sprintf("%v|%v", node.name, node.cluster)
-		if contains(allEverKnownDatanodes, serializedNode) == false {
-			allEverKnownDatanodes = append(allEverKnownDatanodes, serializedNode)
+		if contains(allEverKnownNodes, serializedNode) == false {
+			allEverKnownNodes = append(allEverKnownNodes, serializedNode)
 		}
 	}
-	sort.Strings(allEverKnownDatanodes)
-	return allEverKnownDatanodes
+	sort.Strings(allEverKnownNodes)
+	return allEverKnownNodes
 }
 
 func clusterNameFromTags(serviceTags []string) string {
@@ -61,7 +61,7 @@ func versionFromTags(serviceTags []string) string {
 	return ""
 }
 
-func discoverEsNodes() ([]datanode, error) {
+func discoverEsNodes() ([]esnode, error) {
 	start := time.Now()
 
 	consulConfig := api.DefaultConfig()
@@ -73,8 +73,8 @@ func discoverEsNodes() ([]datanode, error) {
 		return nil, err
 	}
 
-	catalogServices, _, err := consul.Catalog().ServiceMultipleTags(
-		"elasticsearch-all", []string{"data"},
+	catalogServices, _, err := consul.Catalog().Service(
+		"elasticsearch-all", "",
 		&api.QueryOptions{AllowStale: true, RequireConsistent: false, UseCache: true},
 	)
 	if err != nil {
@@ -83,11 +83,11 @@ func discoverEsNodes() ([]datanode, error) {
 		return nil, err
 	}
 
-	var datanodeList []datanode
+	var nodeList []esnode
 	for _, svc := range catalogServices {
 		log.Debug("Service discovered: ", svc.Node, " (", svc.Address, ":", svc.ServicePort, ")")
 
-		datanodeList = append(datanodeList, datanode{
+		nodeList = append(nodeList, esnode{
 			name:    svc.Node,
 			ip:      svc.Address,
 			port:    svc.ServicePort,
@@ -96,10 +96,10 @@ func discoverEsNodes() ([]datanode, error) {
 		})
 	}
 
-	nodesCount := len(datanodeList)
-	datanodeCount.Set(float64(nodesCount))
-	log.Debug(nodesCount, " datanodes found")
+	nodesCount := len(nodeList)
+	nodeCount.Set(float64(nodesCount))
+	log.Debug(nodesCount, " nodes found")
 
 	consulDiscoveryDurationSummary.Observe(float64(time.Since(start).Nanoseconds()))
-	return datanodeList, nil
+	return nodeList, nil
 }

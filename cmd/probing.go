@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func probeDatanode(node *datanode, updateProbingPeriod time.Duration) error {
+func probeNode(node *esnode, updateProbingPeriod time.Duration) error {
 	client := &http.Client{
 		Timeout: updateProbingPeriod - 2*time.Second,
 	}
@@ -24,7 +24,7 @@ func probeDatanode(node *datanode, updateProbingPeriod time.Duration) error {
 	if err != nil {
 		log.Debug("Probing failed for ", node.name, ": ", probingURL, " ", err.Error())
 		log.Error(err)
-		datanodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(0)
+		nodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(0)
 		errorsCount.Inc()
 		return err
 	}
@@ -33,13 +33,13 @@ func probeDatanode(node *datanode, updateProbingPeriod time.Duration) error {
 	log.Debug("Probe result for ", node.name, ": ", resp.Status)
 	if resp.StatusCode != 200 {
 		log.Error("Probing failed for ", node.name, ": ", probingURL, " ", resp.Status)
-		datanodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(0)
+		nodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(0)
 		errorsCount.Inc()
 		return fmt.Errorf("ES Probing failed")
 	}
 
-	datanodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(1)
-	datanodeSearchLatencySummary.WithLabelValues(node.cluster, node.name).Observe(durationNanosec)
+	nodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(1)
+	nodeSearchLatencySummary.WithLabelValues(node.cluster, node.name).Observe(durationNanosec)
 
 	return nil
 }
