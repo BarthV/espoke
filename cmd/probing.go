@@ -5,10 +5,12 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/valyala/fastjson"
 )
 
 func probeNode(node *esnode, updateProbingPeriod time.Duration) error {
@@ -36,6 +38,16 @@ func probeNode(node *esnode, updateProbingPeriod time.Duration) error {
 		nodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(0)
 		errorsCount.Inc()
 		return fmt.Errorf("ES Probing failed")
+	}
+
+	body, readErr := ioutil.ReadAll(resp.Body)
+	if readErr == nil {
+		var p fastjson.Parser
+		v, jsonErr := p.Parse(string(body))
+		if jsonErr == nil {
+			shardsSuccessfulGauge.WithLabelValues(node.cluster, node.name).Set(v.GetFloat64("_shards", "successful"))
+			docsHitGauge.WithLabelValues(node.cluster, node.name).Set(v.GetFloat64("hits", "total"))
+		}
 	}
 
 	nodeAvailabilityGauge.WithLabelValues(node.cluster, node.name).Set(1)

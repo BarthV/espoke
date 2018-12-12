@@ -26,6 +26,22 @@ var (
 		Help: "Reports current discovered nodes amount",
 	})
 
+	shardsSuccessfulGauge = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "es_node_shards_successful",
+			Help: "Reports current successful shards",
+		},
+		[]string{"cluster", "nodename"},
+	)
+
+	docsHitGauge = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "es_node_documents_hit",
+			Help: "Reports current successful shards",
+		},
+		[]string{"cluster", "nodename"},
+	)
+
 	nodeAvailabilityGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "es_node_availability",
